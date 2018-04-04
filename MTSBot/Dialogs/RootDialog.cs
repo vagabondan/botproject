@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Threading.Tasks;
 using Microsoft.Bot.Builder.Dialogs;
 using Microsoft.Bot.Connector;
@@ -8,6 +9,14 @@ namespace MTSBot.Dialogs
     [Serializable]
     public class RootDialog : IDialog<object>
     {
+        private Dictionary<string,string> WhatToDo = new Dictionary<string, string>();
+
+        RootDialog()
+        {
+            WhatToDo.Add("help","Get help");
+            WhatToDo.Add("feedback","Give feedback");
+        }
+
         public Task StartAsync(IDialogContext context)
         {
             context.Wait(MessageReceivedAsync);
@@ -19,13 +28,35 @@ namespace MTSBot.Dialogs
         {
             var activity = await result as Activity;
 
-            // calculate something for us to return
-            int length = (activity.Text ?? string.Empty).Length;
+            // Ask User about what he wants
+            PromptDialog.Choice<string>(context, OnSelectedAnswer,
+                            WhatToDo.Values,
+                            "What do you want to do?",
+                            promptStyle: PromptStyle.Auto
+                        );
 
-            // return our reply to the user
-            await context.PostAsync($"You sent {activity.Text} which was {length} characters");
 
             context.Wait(MessageReceivedAsync);
+        }
+
+        private async Task OnSelectedAnswer(IDialogContext context, IAwaitable<string> result)
+        {
+            var message = await result;
+
+            if (WhatToDo.ContainsValue(message))
+            {
+                foreach (var keys in WhatToDo.Keys)
+                {
+                    
+                }
+
+            }
+            else
+            {
+                await context.PostAsync("sorry, I don't understand what you want to go");
+                context.Wait(MessageReceivedAsync);
+            }
+
         }
     }
 }
