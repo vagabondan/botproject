@@ -43,13 +43,14 @@ namespace MTSBot.Dialogs
 
             if (WhatToDo.ContainsValue(message))
             {
-
                 if (WhatToDo["help"] == message)
                 {
+                    await context.PostAsync("Задайте пожалуйста вопрос, чтобы мы смогли помочь Вам");
                     context.Call(new MTSQADialog(), Resume);
                 }
                 else if (WhatToDo["feedback"] == message)
                 {
+                    await context.PostAsync("Оцените пожалуйста, смогли ли мы помочь Вам");
                     context.Call(new SatisfactionDialog(), Resume);
                 }
 
