@@ -11,7 +11,7 @@ namespace MTSBot.Dialogs
     {
         private Dictionary<string,string> WhatToDo = new Dictionary<string, string>();
 
-        RootDialog()
+        public RootDialog()
         {
             WhatToDo.Add("help","Get help");
             WhatToDo.Add("feedback","Give feedback");
