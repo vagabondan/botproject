@@ -14,15 +14,15 @@ namespace MTSBot.Dialogs
 
         public RootDialog()
         {
-            WhatToDo.Add("help", "Get help");
-            WhatToDo.Add("feedback", "Give feedback");
+            WhatToDo.Add("help", "Задать вопрос");
+            WhatToDo.Add("feedback", "Оценить работу");
         }
 
         public async Task StartAsync(IDialogContext context)
         {
             context.Wait(MessageReceivedAsync);
 
-            //return Task.CompletedTask;
+            // return Task.CompletedTask;
         }
 
         private async Task MessageReceivedAsync(IDialogContext context, IAwaitable<object> result)
@@ -32,7 +32,7 @@ namespace MTSBot.Dialogs
             // Ask User about what he wants
             PromptDialog.Choice<string>(context, OnSelectedAnswer,
                 WhatToDo.Values,
-                "What do you want to do?",
+                "Что Вы хотите сделать ?",
                 promptStyle: PromptStyle.Auto
             );
         }
@@ -46,7 +46,7 @@ namespace MTSBot.Dialogs
 
                 if (WhatToDo["help"] == message)
                 {
-                    context.Call(new QADialog(), Resume);
+                    context.Call(new MTSQADialog(), Resume);
                 }
                 else if (WhatToDo["feedback"] == message)
                 {
@@ -56,7 +56,7 @@ namespace MTSBot.Dialogs
             }
             else
             {
-                await context.PostAsync("sorry, I don't understand what you want to go");
+                await context.PostAsync("Извините, не понимаю, что Вы хотите сделать");
                 context.Wait(MessageReceivedAsync);
             }
 
@@ -65,10 +65,10 @@ namespace MTSBot.Dialogs
         private async Task Resume(IDialogContext context, IAwaitable<object> result)
         {
 
-            await context.PostAsync("Thanks you, let me know what else I can do for you.");
+            await context.PostAsync("Спасибо, если понадобится помощь, зовите.");
             PromptDialog.Choice<string>(context, OnSelectedAnswer,
                 WhatToDo.Values,
-                "What do you want to do?",
+                "Что Вы хотите сделать ?",
                 promptStyle: PromptStyle.Auto
             );
 

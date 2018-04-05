@@ -6,7 +6,7 @@ namespace MTSBot.Utilits
 {
         public static class TextAnalyzer
         {
-            public static string MakeAnalysisRequest(string message)
+            public static double MakeAnalysisRequest(string message)
             {
                 // Create a client.
                 ITextAnalyticsAPI client = new TextAnalyticsAPI
@@ -23,7 +23,8 @@ namespace MTSBot.Utilits
                           new MultiLanguageInput("ru", "0", message),
                             }));
                 var score = result.Documents[0].Score;
-                return score.HasValue ? score.ToString() : "Что-то пошло не так";
+                return score.HasValue ? score.Value : 0;
+                // score.HasValue ? score.ToString() : "Что-то пошло не так";
             }
         }
 }

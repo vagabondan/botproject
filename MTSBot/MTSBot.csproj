@@ -163,6 +163,7 @@
   <ItemGroup>
     <Compile Include="App_Start\WebApiConfig.cs" />
     <Compile Include="Controllers\MessagesController.cs" />
+    <Compile Include="Dialogs\MTSQADialog.cs" />
     <Compile Include="Dialogs\QADialog.cs" />
     <Compile Include="Dialogs\RootDialog.cs" />
     <Compile Include="Dialogs\SatisfactionDialog.cs" />
@@ -175,6 +176,7 @@
       <DesignTime>True</DesignTime>
       <DependentUpon>Resources.resx</DependentUpon>
     </Compile>
+    <Compile Include="Utilits\Common.cs" />
     <Compile Include="Utilits\TextAnalyser.cs" />
   </ItemGroup>
   <ItemGroup>
