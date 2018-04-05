@@ -8,18 +8,17 @@ namespace MTSBot.Dialogs
     [Serializable]
     public class SatisfactionDialog : IDialog<object>
     {
-        public Task StartAsync(IDialogContext context)
+        public async Task StartAsync(IDialogContext context)
         {
-            context.Wait(MessageReceivedAsync);
-
-            return Task.CompletedTask;
+            await context.PostAsync("You are trying to give a feedback, this feature will colme soon");
+            //context.Wait(MessageReceivedAsync);
+            context.Done(true);
+            //return Task.CompletedTask;
         }
 
         private async Task MessageReceivedAsync(IDialogContext context, IAwaitable<object> result)
         {
-            var activity = await result as IMessageActivity;
-
-            // TODO: Put logic for handling user message here
+            var activity = await result as IMessageActivity;            
 
             context.Wait(MessageReceivedAsync);
         }
