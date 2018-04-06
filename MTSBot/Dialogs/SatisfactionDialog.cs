@@ -24,9 +24,14 @@ namespace MTSBot.Dialogs
         {
             var activity = await result as IMessageActivity;
             double feedbackScore = TextAnalyzer.MakeAnalysisRequest(activity.Text);
-            String clientResponse = (feedbackScore >= 0.5) ?
-                "Спасибо за отзыв, мы будем работать для Вас еще лучше !" :
-                "Извините, мы постараемся работать лучше для Вас !";
+            String clientResponse = String.Format("Ваш отзыв был оценен как положительный на {0}%.\n{1}",
+                Math.Round(feedbackScore * 100),
+                (feedbackScore >= 0.5) ?
+                "Спасибо, мы будем работать для Вас еще лучше !" :
+                "Извините, мы постараемся работать для Вас лучше !");
+                // (feedbackScore >= 0.5) ?
+                // "Спасибо за отзыв, мы будем работать для Вас еще лучше !" :
+                // "Извините, мы постараемся работать лучше для Вас !";
             
             // ---------------------------------------------------------------
             // Save customer's reply to Azure Storage Tables
