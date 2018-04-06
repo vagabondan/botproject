@@ -189,6 +189,7 @@
     <Compile Include="CommandHandling\CommandMessageHandler.cs" />
     <Compile Include="Controllers\AgentController.cs" />
     <Compile Include="Controllers\MessagesController.cs" />
+    <Compile Include="Utilits\CustomerFeedback.cs" />
     <Compile Include="Dialogs\MTSQADialog.cs" />
     <Compile Include="Dialogs\RootDialog.cs" />
     <Compile Include="Dialogs\SatisfactionDialog.cs" />
