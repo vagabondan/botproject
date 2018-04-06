@@ -69,6 +69,9 @@ namespace MTSBot
                 routeTemplate: "api/{controller}/{id}",
                 defaults: new { id = RouteParameter.Optional }
             );
+
+            // Message routing
+            InitializeMessageRouting();
         }
         /// <summary>
         /// Creates and sets up the instances required for message routing.
