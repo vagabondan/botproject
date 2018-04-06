@@ -1,14 +1,15 @@
 ﻿using System.Collections.Generic;
+using System.Globalization;
 using System.Net;
 using System.Net.Http;
 using System.Threading.Tasks;
 using System.Web.Http;
-using IntermediatorBot.Strings;
 using IntermediatorBotSample.CommandHandling;
 using IntermediatorBotSample.MessageRouting;
 using Microsoft.Bot.Builder.Dialogs;
 using Microsoft.Bot.Connector;
 using MTSBot.Dialogs;
+using MTSBot.Strings;
 using Underscore.Bot.MessageRouting;
 using Underscore.Bot.Models;
 using Underscore.Bot.Utils;
@@ -24,6 +25,11 @@ namespace MTSBot
         /// </summary>
         public async Task<HttpResponseMessage> Post([FromBody]Activity activity)
         {
+            if (activity.Locale != null)
+            {
+                ConversationText.Culture = new CultureInfo(activity.Locale);
+            }
+
             if (activity.Type == ActivityTypes.Message)
             {
                 MessageRouterManager messageRouterManager = WebApiConfig.MessageRouterManager;

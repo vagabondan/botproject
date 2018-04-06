@@ -20,9 +20,9 @@ namespace MTSBot.Dialogs
 
         public async Task StartAsync(IDialogContext context)
         {
-            context.Wait(MessageReceivedAsync);
+            context.Wait(this.MessageReceivedAsync);
 
-            // return Task.CompletedTask;
+            //return Task.CompletedTask;
         }
 
         private async Task MessageReceivedAsync(IDialogContext context, IAwaitable<object> result)
@@ -30,11 +30,29 @@ namespace MTSBot.Dialogs
             var activity = await result as Activity;
 
             // Ask User about what he wants
-            PromptDialog.Choice<string>(context, OnSelectedAnswer,
+            PromptDialog.Choice<string>(context, this.OnSelectedAnswer,
                 WhatToDo.Values,
                 "Что Вы хотите сделать ?",
-                promptStyle: PromptStyle.Auto
+                promptStyle: PromptStyle.Auto,
+                attempts: 3
             );
+            //var reply = context.MakeMessage();
+
+            //reply.Attachments = new List<Attachment>();
+            //List<CardAction> cardButtons = new List<CardAction>();
+            //cardButtons.Add(new CardAction() { Title = WhatToDo["help"], Value = WhatToDo["help"], Type = "postBack" });
+            //cardButtons.Add(new CardAction() { Title = WhatToDo["feedback"], Value = WhatToDo["feedback"], Type = "postBack" });            
+            //HeroCard plCard = new HeroCard()
+            //{
+            //    Title = "Что Вы хотите сделать ?", //"Select the service youn want to search",
+            //    Buttons = cardButtons
+            //};
+
+            //Attachment plAttachment = plCard.ToAttachment();
+            //reply.Attachments.Add(plAttachment);
+
+            //await context.PostAsync(reply);
+            //context.Wait<string>(this.OnSelectedAnswer);
         }
 
         private async Task OnSelectedAnswer(IDialogContext context, IAwaitable<string> result)

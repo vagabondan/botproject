@@ -1,5 +1,6 @@
 ﻿using IntermediatorBot.Strings;
 using Microsoft.Bot.Connector;
+using MTSBot.Strings;
 using System;
 using System.Collections.Generic;
 using System.Globalization;

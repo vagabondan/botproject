@@ -1,6 +1,7 @@
 ﻿using IntermediatorBot.Strings;
 using IntermediatorBotSample.MessageRouting;
 using Microsoft.Bot.Connector;
+using MTSBot.Strings;
 using System;
 using System.Collections.Generic;
 using System.Linq;

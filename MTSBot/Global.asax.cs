@@ -18,8 +18,7 @@ namespace MTSBot
     {
         protected void Application_Start()
         {
-            GlobalConfiguration.Configure(WebApiConfig.Register);
-            // To be replaced by table storage
+
 
             BotSettings botSettings = new BotSettings();
             string connectionString = botSettings[BotSettings.KeyRoutingDataStorageConnectionString];
@@ -29,27 +28,35 @@ namespace MTSBot
                 {
                     builder.RegisterModule(new AzureModule(Assembly.GetExecutingAssembly()));
 
-                    // Bot Storage: register state storage for your bot
-                    IBotDataStore<BotData> botDataStore = null;
-
                     if (string.IsNullOrEmpty(connectionString))
                     {
                         // Default store: volatile in-memory store - Only for prototyping!
                         System.Diagnostics.Debug.WriteLine("WARNING!!! Using InMemoryDataStore, which should be only used for prototyping, for the bot state!");
-                        botDataStore = new InMemoryDataStore();
+                        var botDataStore = new InMemoryDataStore();
+                        builder.Register(c => botDataStore)
+                            .Keyed<IBotDataStore<BotData>>(AzureModule.Key_DataStore)
+                            .AsSelf()
+                            .SingleInstance();
                     }
+
                     else
                     {
                         // Azure Table Storage
                         System.Diagnostics.Debug.WriteLine("Using Azure Table Storage for the bot state");
-                        botDataStore = new TableBotDataStore(connectionString);
-                    }
+                        var store = new TableBotDataStore(connectionString);
 
-                    builder.Register(c => botDataStore)
-                        .Keyed<IBotDataStore<BotData>>(AzureModule.Key_DataStore)
-                        .AsSelf()
-                        .SingleInstance();
+                        //botDataStore = new TableBotDataStore(connectionString);
+                        builder.Register(c => store)
+                           .Keyed<IBotDataStore<BotData>>(AzureModule.Key_DataStore)
+                           .AsSelf()
+                           .SingleInstance();
+
+                    }
                 });
+
+
+
+            GlobalConfiguration.Configure(WebApiConfig.Register);
         }
     }
 }
