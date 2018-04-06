@@ -165,7 +165,6 @@
     <Compile Include="Controllers\MessagesController.cs" />
     <Compile Include="Utilits\CustomerFeedback.cs" />
     <Compile Include="Dialogs\MTSQADialog.cs" />
-    <Compile Include="Dialogs\QADialog.cs" />
     <Compile Include="Dialogs\RootDialog.cs" />
     <Compile Include="Dialogs\SatisfactionDialog.cs" />
     <Compile Include="Global.asax.cs">
