@@ -163,6 +163,7 @@
   <ItemGroup>
     <Compile Include="App_Start\WebApiConfig.cs" />
     <Compile Include="Controllers\MessagesController.cs" />
+    <Compile Include="Dialogs\CustomerFeedback.cs" />
     <Compile Include="Dialogs\MTSQADialog.cs" />
     <Compile Include="Dialogs\QADialog.cs" />
     <Compile Include="Dialogs\RootDialog.cs" />

@@ -1,7 +1,10 @@
 ﻿using System;
+using System.Configuration;
 using System.Threading.Tasks;
 using Microsoft.Bot.Builder.Dialogs;
 using Microsoft.Bot.Connector;
+using Microsoft.WindowsAzure.Storage;
+using Microsoft.WindowsAzure.Storage.Table;
 using MTSBot.Utilits;
 
 namespace MTSBot.Dialogs
@@ -20,16 +23,29 @@ namespace MTSBot.Dialogs
         private async Task MessageReceivedAsync(IDialogContext context, IAwaitable<object> result)
         {
             var activity = await result as IMessageActivity;
-            // double analisysScore = TextAnalyzer.MakeAnalysisRequest(activity.Text);
-            String clientResponse = String.Empty;
-            if (TextAnalyzer.MakeAnalysisRequest(activity.Text) >= 0.5)
-            {
-                clientResponse = "Спасибо за отзыв, мы будем работать для Вас еще лучше !";
-            }
-            else
-            {
-                clientResponse = "Извините, мы постараемся работать лучше для Вас !";
-            }
+            double feedbackScore = TextAnalyzer.MakeAnalysisRequest(activity.Text);
+            String clientResponse = (feedbackScore >= 0.5) ?
+                "Спасибо за отзыв, мы будем работать для Вас еще лучше !" :
+                "Извините, мы постараемся работать лучше для Вас !";
+            
+            // ---------------------------------------------------------------
+            // Save customer's reply to Azure Storage Tables
+            // ---------------------------------------------------------------
+            CloudStorageAccount storageAccount = CloudStorageAccount.Parse(ConfigurationManager.AppSettings["StorageConnectionString"]);
+            // ("DefaultEndpointsProtocol=https;AccountName=tevappstorage;AccountKey=NMr/WodMMGKGijaOBFV4xqVMKL8UlZbUDWB608W5XazIuYX4UMf4FHf3r2rZtNL7PdBEIWmoRsOLt8JiRW9YHw==;EndpointSuffix=core.windows.net");
+
+            CloudTableClient tableClient = storageAccount.CreateCloudTableClient();
+            CloudTable table = tableClient.GetTableReference("CustomerFeedback");
+            table.CreateIfNotExists();
+
+            CustomerFeedback custFeedback = new CustomerFeedback(activity.ChannelId, activity.Id);
+            custFeedback.Locale = activity.Locale;
+            custFeedback.Text = activity.Text;
+            custFeedback.Score = feedbackScore;
+
+            TableOperation insertOperation = TableOperation.Insert(custFeedback);
+            await table.ExecuteAsync(insertOperation);
+
             await context.PostAsync(clientResponse);
             context.Done(true);
             // context.Wait(MessageReceivedAsync);
