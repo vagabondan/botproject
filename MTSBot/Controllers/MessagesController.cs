@@ -1,9 +1,17 @@
-﻿using System.Net;
+﻿using System.Collections.Generic;
+using System.Net;
 using System.Net.Http;
 using System.Threading.Tasks;
 using System.Web.Http;
+using IntermediatorBot.Strings;
+using IntermediatorBotSample.CommandHandling;
+using IntermediatorBotSample.MessageRouting;
 using Microsoft.Bot.Builder.Dialogs;
 using Microsoft.Bot.Connector;
+using MTSBot.Dialogs;
+using Underscore.Bot.MessageRouting;
+using Underscore.Bot.Models;
+using Underscore.Bot.Utils;
 
 namespace MTSBot
 {
@@ -18,7 +26,55 @@ namespace MTSBot
         {
             if (activity.Type == ActivityTypes.Message)
             {
-                await Conversation.SendAsync(activity, () => new Dialogs.RootDialog());
+                MessageRouterManager messageRouterManager = WebApiConfig.MessageRouterManager;
+                MessageRouterResultHandler messageRouterResultHandler = WebApiConfig.MessageRouterResultHandler;
+                bool rejectConnectionRequestIfNoAggregationChannel =
+                    WebApiConfig.Settings.RejectConnectionRequestIfNoAggregationChannel;
+
+                messageRouterManager.MakeSurePartiesAreTracked(activity);
+
+                // First check for commands (both from back channel and the ones directly typed)
+                MessageRouterResult messageRouterResult =
+                    WebApiConfig.BackChannelMessageHandler.HandleBackChannelMessage(activity);
+
+                if (messageRouterResult.Type != MessageRouterResultType.Connected
+                    && await WebApiConfig.CommandMessageHandler.HandleCommandAsync(activity) == false)
+                {
+                    // No valid back channel (command) message or typed command detected
+
+                    // Let the message router manager instance handle the activity
+                    messageRouterResult = await messageRouterManager.HandleActivityAsync(
+                        activity, false, rejectConnectionRequestIfNoAggregationChannel);
+
+                    if (messageRouterResult.Type == MessageRouterResultType.NoActionTaken)
+                    {
+                        // No action was taken by the message router manager. This means that the
+                        // user is not connected (in a 1:1 conversation) with a human
+                        // (e.g. customer service agent) yet.
+                        //
+                        // You can, for example, check if the user (customer) needs human
+                        // assistance here or forward the activity to a dialog. You could also do
+                        // the check in the dialog too...
+                        //
+                        // Here's an example:
+                        if (!string.IsNullOrEmpty(activity.Text)
+                            && activity.Text.ToLower().Contains(Commands.CommandRequestConnection))
+                        {
+                            messageRouterResult = messageRouterManager.RequestConnection(
+                                activity, rejectConnectionRequestIfNoAggregationChannel);
+                        }
+                        else
+                        {
+                            await Conversation.SendAsync(activity, () => new RootDialog());
+                        }
+                    }
+                }
+
+                // Uncomment to see the result in a reply (may be useful for debugging)
+                //await MessagingUtils.ReplyToActivityAsync(activity, messageRouterResult.ToString());
+
+                // Handle the result, if required
+                await messageRouterResultHandler.HandleResultAsync(messageRouterResult);
             }
             else
             {
@@ -28,29 +84,55 @@ namespace MTSBot
             return response;
         }
 
-        private Activity HandleSystemMessage(Activity message)
+        private Activity HandleSystemMessage(Activity activity)
         {
-            if (message.Type == ActivityTypes.DeleteUserData)
+            MessageRouterManager messageRouterManager = WebApiConfig.MessageRouterManager;
+
+            if (activity.Type == ActivityTypes.DeleteUserData)
             {
-                // Implement user deletion here
-                // If we handle user deletion, return a real message
+                Party senderParty = MessagingUtils.CreateSenderParty(activity);
+                IList<MessageRouterResult> messageRouterResults = messageRouterManager.RemoveParty(senderParty);
+
+                foreach (MessageRouterResult messageRouterResult in messageRouterResults)
+                {
+                    if (messageRouterResult.Type == MessageRouterResultType.OK)
+                    {
+                        System.Diagnostics.Debug.WriteLine(ConversationText.UserDataDeleted, senderParty.ChannelAccount?.Name);
+                    }
+                }
             }
-            else if (message.Type == ActivityTypes.ConversationUpdate)
+            else if (activity.Type == ActivityTypes.ConversationUpdate)
             {
                 // Handle conversation state changes, like members being added and removed
                 // Use Activity.MembersAdded and Activity.MembersRemoved and Activity.Action for info
                 // Not available in all channels
+                if (activity.MembersRemoved != null && activity.MembersRemoved.Count > 0)
+                {
+                    foreach (ChannelAccount channelAccount in activity.MembersRemoved)
+                    {
+                        Party partyToRemove = new Party(activity.ServiceUrl, activity.ChannelId, channelAccount, activity.Conversation);
+                        IList<MessageRouterResult> messageRouterResults = messageRouterManager.RemoveParty(partyToRemove);
+
+                        foreach (MessageRouterResult messageRouterResult in messageRouterResults)
+                        {
+                            if (messageRouterResult.Type == MessageRouterResultType.OK)
+                            {
+                                System.Diagnostics.Debug.WriteLine(ConversationText.PartyRemoved, partyToRemove.ChannelAccount?.Name);
+                            }
+                        }
+                    }
+                }
             }
-            else if (message.Type == ActivityTypes.ContactRelationUpdate)
+            else if (activity.Type == ActivityTypes.ContactRelationUpdate)
             {
                 // Handle add/remove from contact lists
                 // Activity.From + Activity.Action represent what happened
             }
-            else if (message.Type == ActivityTypes.Typing)
+            else if (activity.Type == ActivityTypes.Typing)
             {
-                // Handle knowing tha the user is typing
+                // Handle knowing that the user is typing
             }
-            else if (message.Type == ActivityTypes.Ping)
+            else if (activity.Type == ActivityTypes.Ping)
             {
             }
 

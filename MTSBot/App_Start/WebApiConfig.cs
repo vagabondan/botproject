@@ -1,14 +1,50 @@
-﻿using Newtonsoft.Json;
+﻿using IntermediatorBotSample.CommandHandling;
+using IntermediatorBotSample.MessageRouting;
+using IntermediatorBotSample.Settings;
+using Newtonsoft.Json;
 using Newtonsoft.Json.Serialization;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Web.Http;
+using Underscore.Bot.MessageRouting;
+using Underscore.Bot.MessageRouting.DataStore;
+using Underscore.Bot.MessageRouting.DataStore.Azure;
+using Underscore.Bot.MessageRouting.DataStore.Local;
 
 namespace MTSBot
 {
     public static class WebApiConfig
     {
+        public static MessageRouterManager MessageRouterManager
+        {
+            get;
+            private set;
+        }
+
+        public static MessageRouterResultHandler MessageRouterResultHandler
+        {
+            get;
+            private set;
+        }
+
+        public static CommandMessageHandler CommandMessageHandler
+        {
+            get;
+            private set;
+        }
+
+        public static BackChannelMessageHandler BackChannelMessageHandler
+        {
+            get;
+            private set;
+        }
+
+        public static BotSettings Settings
+        {
+            get;
+            private set;
+        }
         public static void Register(HttpConfiguration config)
         {
             // Json settings
@@ -23,6 +59,7 @@ namespace MTSBot
             };
 
             // Web API configuration and services
+            config.EnableCors();
 
             // Web API routes
             config.MapHttpAttributeRoutes();
@@ -32,6 +69,31 @@ namespace MTSBot
                 routeTemplate: "api/{controller}/{id}",
                 defaults: new { id = RouteParameter.Optional }
             );
+        }
+        /// <summary>
+        /// Creates and sets up the instances required for message routing.
+        /// </summary>
+        public static void InitializeMessageRouting()
+        {
+            Settings = new BotSettings();
+            string connectionString = Settings[BotSettings.KeyRoutingDataStorageConnectionString];
+            IRoutingDataManager routingDataManager = null;
+
+            if (string.IsNullOrEmpty(connectionString))
+            {
+                System.Diagnostics.Debug.WriteLine($"WARNING!!! No connection string found - using {nameof(LocalRoutingDataManager)}");
+                routingDataManager = new LocalRoutingDataManager();
+            }
+            else
+            {
+                System.Diagnostics.Debug.WriteLine($"Found a connection string - using {nameof(AzureTableStorageRoutingDataManager)}");
+                routingDataManager = new AzureTableStorageRoutingDataManager(connectionString);
+            }
+
+            MessageRouterManager = new MessageRouterManager(routingDataManager);
+            MessageRouterResultHandler = new MessageRouterResultHandler(MessageRouterManager);
+            CommandMessageHandler = new CommandMessageHandler(MessageRouterManager, MessageRouterResultHandler);
+            BackChannelMessageHandler = new BackChannelMessageHandler(MessageRouterManager.RoutingDataManager);
         }
     }
 }
